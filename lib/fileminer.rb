@@ -20,4 +20,8 @@ class Miner
     # TODO
   end
 
+  def save_registry
+    File.open(@registry_path, 'w') { |io| io.write @registry.to_json }
+  end
+
 end
