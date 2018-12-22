@@ -1,11 +1,6 @@
 require 'json'
 
 
-def json_parse text
-  JSON.parse text, {symbolize_names: true}
-end
-
-
 class Miner
 
   def initialize registry_path, paths, output
@@ -14,7 +9,7 @@ class Miner
     @output = output
     @registry = []
     if File.exist? registry_path
-      File.open(registry_path) { |io| @registry = json_parse io.read }
+      File.open(registry_path) { |io| @registry = JSON.parse(io.read, {symbolize_names: true}) }
     end
     @files = @registry.map { |e| [e['path'], e] }
     # TODO
