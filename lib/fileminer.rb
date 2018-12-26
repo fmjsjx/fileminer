@@ -18,11 +18,21 @@ class Miner
       File.open(registry_path) { |io| @registry = JSON.parse(io.read, {symbolize_names: true}) }
     end
     @files = (@registry.map { |e| [e['path'], e] }).to_h
-    # TODO
+    refresh_files
+    save_registry
   end
 
+  # Save registry file
   def save_registry
     File.open(@registry_path, 'w') { |io| io.write @registry.to_json }
+  end
+
+  def refresh_files
+    real_files = []
+    @paths.each do |path|
+      real_files += Dir[path]
+    end
+    # TODO
   end
 
 end
