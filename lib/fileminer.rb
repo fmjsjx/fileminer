@@ -2,44 +2,84 @@ require 'set'
 require 'json'
 
 
+class Dir
+
+  class << self
+
+    # Creates the directory with the path given, including anynecessary but nonexistent parent directories.
+    #
+    # @param [String] path
+    def mkdirs(path)
+      parent = File.dirname path
+      mkdirs parent unless Dir.exist? parent
+      Dir.mkdir path
+    end
+
+  end
+
+end
+
+
 class Miner
+
+  class << self
+
+    DEFAULT_OPTIONS = {
+      registry_path: '/var/lib/fileminer/registry',
+      eof_seconds: 86400,
+      batch_lines: 50,
+    }
+
+    private
+    def fix_options(options)
+      DEFAULT_OPTIONS.each { |k, v| options[k] = v unless options.key? k }
+    end
+
+  end
+
+  attr_reader :registry_path, :paths, :eof_seconds, :output, :file_list
 
   # Create a new file miner instance
   #
   # @param [Hash] options
   # @option options [String] :registry_path
   # @option options [Array] :paths
+  # @option options [Integer] :eof_seconds
   # @option options [OutputPlugin] :output
+  # @option options [Integer] :batch_lines
   def initialize(options = {})
+    fix_options options
     @registry_path = options[:registry_path]
     @paths = options[:paths]
     @eof_seconds = options[:eof_seconds]
     @output = options[:output]
-    @registry = []
-    if File.exist? registry_path
-      File.open(registry_path) { |io| @registry = JSON.parse(io.read, {symbolize_names: true}) }
+    @batch_lines = options[:batch_lines]
+    @file_list = []
+    if File.exist? @registry_path
+      File.open(@registry_path) { |io| @file_list = JSON.parse(io.read, {symbolize_names: true}) }
+    else
+      parent_dir = File.dirname @registry_path
+      Dir.mkdirs parent_dir unless Dir.exist? parent_dir
     end
-    @files = (@registry.map { |e| [e[:path], e] }).to_h
-    refresh_files
-    save_registry
   end
 
-  # Save registry file
+  # Save registry
   def save_registry
-    File.open(@registry_path, 'w') { |io| io.write @registry.to_json }
+    File.open(@registry_path, 'w') { |io| io.write @file_list.to_json }
   end
 
-  # refresh files
-  def refresh_files
-    real_file_paths = Set.new
+  # Refresh
+  def refresh_file_list
+    file_paths = Set.new
     @paths.each do |path|
-      real_file_paths.merge Dir[path]
+      file_paths.merge Dir[path].select { |path| File.file? path }
     end
-    @files.each do |path, record|
+    @file_list.each do |record|
+      path = record[:path]
       unless record[:eof]
-        if real_file_paths.include? path
-          # has 
-          if Time.now - File::mtime(path) > @eof_seconds
+        if file_paths.delete? path
+          # check if EOF
+          if record[:pos] == File.size(path) && Time.now - File.mtime(path) > @eof_seconds
             record[:eof] = true
           end
         else
@@ -48,7 +88,12 @@ class Miner
         end
       end
     end
-    # TODO
+    file_paths.each do |path|
+      record = {path: path, pos: 0, eof: false}
+      @registry << record
+      @files[path] = record
+    end
+    @file_list_refresh_time = Time.now
   end
 
 end
