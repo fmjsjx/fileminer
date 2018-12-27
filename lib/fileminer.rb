@@ -22,33 +22,25 @@ end
 
 class Miner
 
-  class << self
-
-    DEFAULT_OPTIONS = {
-      registry_path: '/var/lib/fileminer/registry',
-      eof_seconds: 86400,
-      batch_lines: 50,
-    }
-
-    private
-    def fix_options(options)
-      DEFAULT_OPTIONS.each { |k, v| options[k] = v unless options.key? k }
-    end
-
-  end
+  DEFAULTS = {
+    registry_path: '/var/lib/fileminer/registry',
+    eof_seconds: 86400,
+    batch_lines: 50,
+  }
 
   attr_reader :registry_path, :paths, :eof_seconds, :output, :file_list
 
   # Create a new file miner instance
   #
   # @param [Hash] options
-  # @option options [String] :registry_path
+  # @option options [String] :registry_path (/var/lib/fileminer/registry)
   # @option options [Array] :paths
-  # @option options [Integer] :eof_seconds
+  # @option options [Integer] :eof_seconds (86400)
   # @option options [OutputPlugin] :output
-  # @option options [Integer] :batch_lines
+  # @option options [Integer] :batch_lines (50)
   def initialize(options = {})
-    fix_options options
+    # fix options by DEFAULTS
+    DEFAULTS.each { |k, v| options[k] = v unless options.key? k }
     @registry_path = options[:registry_path]
     @paths = options[:paths]
     @eof_seconds = options[:eof_seconds]
@@ -90,8 +82,7 @@ class Miner
     end
     file_paths.each do |path|
       record = {path: path, pos: 0, eof: false}
-      @registry << record
-      @files[path] = record
+      @file_list << record
     end
     @file_list_refresh_time = Time.now
   end
