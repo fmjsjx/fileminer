@@ -30,5 +30,8 @@ if __FILE__ == $0
   yml = File.open(ARGV[0]) { |io| io.read }
   conf = YAML.load yml
   miner_options = {}
+  miner_options.merge! conf['fileminer.settings'].keys_to_sym if conf.key? 'fileminer.settings'
+  miner_options.merge! conf['fileminer.inputs'].keys_to_sym if conf.key? 'fileminer.inputs'
+  puts miner_options
   # TODO
 end
