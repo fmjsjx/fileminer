@@ -1,0 +1,17 @@
+# general settings
+fileminer.settings:
+  registry_path: /var/lib/fileminer/registry
+# fileminer inputs
+fileminer.inputs:
+  paths: [/path/to/*.log]
+# -- output --
+# redis output
+output.redis:
+  uri: redis://localhost:6379/0
+  #host: localhost
+  #port: 6379
+  #db: 0
+  #password:
+  key: fileminer
+
+
