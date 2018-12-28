@@ -28,7 +28,7 @@ class Miner
     batch_lines: 50,
   }
 
-  attr_reader :registry_path, :paths, :eof_seconds, :output, :file_list
+  attr_reader :registry_path, :paths, :eof_seconds, :file_list
 
   # Create a new file miner instance
   #
@@ -36,16 +36,20 @@ class Miner
   # @option options [String] :registry_path (/var/lib/fileminer/registry)
   # @option options [Array] :paths
   # @option options [Integer] :eof_seconds (86400)
-  # @option options [OutputPlugin] :output
   # @option options [Integer] :batch_lines (50)
+  # @option options [String] :host (Socket.gethostname)
   def initialize(options = {})
     # fix options by DEFAULTS
     DEFAULTS.each { |k, v| options[k] = v unless options.key? k }
     @registry_path = options[:registry_path]
     @paths = options[:paths]
     @eof_seconds = options[:eof_seconds]
-    @output = options[:output]
     @batch_lines = options[:batch_lines]
+    @host = options[:host]
+    if @host.nil?
+      require 'socket'
+      @host = Socket.gethostname
+    end
     @file_list = []
     if File.exist? @registry_path
       File.open(@registry_path) { |io| @file_list = JSON.parse(io.read, {symbolize_names: true}) }
@@ -85,6 +89,32 @@ class Miner
       @file_list << record
     end
     @file_list_refresh_time = Time.now
+  end
+
+  # Read lines
+  def read_lines(record)
+    file_path = record[:path]
+    File.open file_path do |io|
+      lines = []
+      io.pos = record[:pos]
+      while lines.size < @batch_lines
+        line = {host: @host, path: file_path, pos: io.pos}
+        begin
+          data = io.readline
+          break if data.nil?
+          if data[-1] != "\n"
+            io.pos = line[:pos]
+            break
+          end
+        rescue EOFError
+          break
+        end
+        line[:data] = data
+        line[:end] = io.pos
+        lines << line
+      end
+      lines
+    end
   end
 
 end

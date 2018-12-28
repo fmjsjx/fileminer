@@ -1,4 +1,5 @@
 require 'redis'
+require 'json'
 require_relative '../output'
 
 
@@ -13,12 +14,11 @@ class RedisOutputPlugin < OutputPlugin
     # TODO
   end
 
-  def send_all(messages)
+  def send_all(lines, &listener)
     # TODO
-  end
-
-  def send(message)
-    # TODO
+    messages = lines.map { |line| line.to_json }
+    puts "send messages #{messages}"
+    listener.call
   end
 
 end

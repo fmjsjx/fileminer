@@ -7,11 +7,11 @@ fileminer.inputs:
 
   # setup the path of the registry file
   # default value is /var/lib/fileminer/registry
-  #registry_path: /var/lib/fileminer/registry
+  registry_path: test_registry
 
   # file paths
   paths:
-    - /path/to/*.log
+    - logs/*.log
 
     # other path
     #- /other/path/*.log
@@ -24,9 +24,6 @@ fileminer.inputs:
   # default value is 50
   #batch_lines: 50
 
-  # Host
-  # default value is `Socket.gethostname`
-  #host: 127.0.0.1
 
 # -- output --
 
