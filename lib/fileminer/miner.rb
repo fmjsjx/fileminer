@@ -109,8 +109,8 @@ class Miner
         rescue EOFError
           break
         end
-        line[:data] = data
         line[:end] = io.pos
+        line[:data] = data
         lines << line
       end
       lines

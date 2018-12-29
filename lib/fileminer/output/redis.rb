@@ -28,7 +28,7 @@ module Output
 
     private
     def parse_uri(options)
-      host = options[:host] || '127.0.0.1'
+      host = options[:host] || 'localhost'
       port = options[:port] || 6379
       db = options[:db] || 0
       password = options[:password]
@@ -40,6 +40,7 @@ module Output
     end
 
     # Send all lines to redis using LPUSH @key
+    #
     # @param [Array] lines
     # @yield a listener to be called after all lines just be sent
     public

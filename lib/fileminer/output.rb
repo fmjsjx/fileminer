@@ -8,6 +8,10 @@ module Output
       true
     end
 
+    def close
+      # do nothing default
+    end 
+
   end
 
 end

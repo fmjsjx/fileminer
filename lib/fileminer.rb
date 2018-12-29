@@ -6,16 +6,14 @@ require 'socket'
 require_relative 'fileminer/miner'
 require_relative 'fileminer/plugins'
 
-
+FILEMINER_SETTINGS = 'fileminer.settings'
 FILEMINER_INPUTS = 'fileminer.inputs'
 
 
 class Hash
 
   def keys_to_sym
-    map do |k, v|
-      [k.to_sym, v]
-    end.to_h
+    map { |k, v| [k.to_sym, v] }.to_h
   end
 
   def keys_to_sym!
@@ -31,7 +29,13 @@ def init_output(conf)
   case
   when conf.key?('output.redis')
     require_relative 'fileminer/output/redis'
-    return Output::RedisPlugin.new conf['output.redis'].keys_to_sym
+    Output::RedisPlugin.new conf['output.redis'].keys_to_sym
+  when conf.key?('output.kafka')
+    require_relative 'fileminer/output/kafka'
+    Output::KafkaPlugin.new conf['output.kafka'].keys_to_sym
+  when conf.key?('output.mysql')
+    require_relative 'fileminer/output/mysql'
+    Output::MysqlPlugin.new conf['output.mysql'].keys_to_sym
   else
     raise 'Missing config for output'
   end

@@ -58,7 +58,50 @@ output.redis:
   # required
   key: fileminer
 
+# output to kafka
+#output.kafka
+  # kafka brokers
+  # default value is [localhost:9092]
+  #brokers: [localhost:9092]
+
+  # producer client_id
+  # default value is fileminer
+  #client_id: fileminer
+
+  # kafka topic
+  # default value is fileminer
+  #topic: fileminer
+
+# output to mysql
+#output.mysql
+  # host
+  # default value is localhost
+  #host: localhost
+
+  # port
+  # default value is 3306
+  #port: 3306
+
+  # username
+  #username: someuser
+
+  # password
+  #password: somepwd
+
+  # database name
+  #database: somedb
+
+  # encoding
+  # default value is utf8mb4
+  #encoding: utf8mb4
+
+  # SSL mode
+  # enabled or disabled
+  # default value is disabled
+  #ssl_mode: disabled
+
+  # table name
+  #table: sometable
 
 # other outputs
-# TODO kafka.output
-# TODO mysql.output
+# TODO
