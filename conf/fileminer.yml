@@ -31,6 +31,8 @@ fileminer.inputs:
 # -- output --
 
 # output to redis
+# based on redis-rb, please make sure that redis has already been installed
+# install redis: gem install redis
 output.redis:
   # the URI of the redis server
   uri: redis://localhost:6379/0
@@ -59,6 +61,8 @@ output.redis:
   key: fileminer
 
 # output to kafka
+# based on ruby-kafka, please make sure that ruby-kafka has already been installed
+# install ruby-kafka: gem install ruby-kafka
 #output.kafka
   # kafka brokers
   # default value is [localhost:9092]
@@ -72,7 +76,29 @@ output.redis:
   # default value is fileminer
   #topic: fileminer
 
+  # producer mode
+  # sync or async
+  # default is sync
+  #mode: sync
+
+  # auto delivery
+  # enabled or disabled
+  # default value is disabled
+  # effective only if mode is async
+  # when effective, at least one of delivery_threshold and delivery_interval should be set
+  #auto_delivery: disabled
+
+  # delivery threshold, trigger a delivery once x messages have been buffered
+  # effective only if mode is async and auto_deliver is enabled
+  #delivery_threshold: 100
+
+  # delivery interval, trigger a delivery every x seconds
+  # effective only if mode is async and auto_deliver is enabled
+  #delivery_interval: 30
+
 # output to mysql
+# based on mysql2, please make sure that mysql2 has already been installed
+# install ruby-kafka: gem install mysql2
 #output.mysql
   # host
   # default value is localhost

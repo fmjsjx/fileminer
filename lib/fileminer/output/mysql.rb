@@ -6,8 +6,8 @@ module Output
 
   class MysqlPlugin < OutputPlugin
 
-    SQL_PREV = "INSERT IGNORE INTO `#@table`(`host`,`path`,`pos`,`end`,`data`) VALUES "
-    SQL_VALUE = '(?,?,?,?,?)'
+    SQL_PREV = 
+    SQL_VALUE = 
 
     # Create a mysql output plugin instance
     #
@@ -29,16 +29,25 @@ module Output
       conf[:host] = 'localhost' unless options.key? :host
       conf[:port] = 3306 unless options.key? :port
       conf[:password] = '' unless options.key? :password
-      conf[:encoding] = 'utf8mb4' unless options.key? :encoding
+      @encoding = conf[:encoding] = 'utf8mb4' unless options.key? :encoding
       conf[:ssl_mode] = :disabled unless options.key? :ssl_mode
       @mysql = Mysql2::Client.new conf
+      create_table_if_not_exists
       @sqls = Hash.new { |hash, key| hash[key] = generate_batch_sql key }
     end
 
     private
+    def create_table_if_not_exists
+      rs = @mysql.query 'SHOW TABLES'
+      tables = rs.map { |row| row.values[0] }
+      unless tables.include? @table
+        # sql = "CREATE TABLE `#@table` ( `id` INT PRIMARY KEY AUTO_INCREMENT, `host` VARCHAR(255) NOT NULL, `path` VARCHAR(255) NOT NULL, `pos` BIGINT) "
+        # TODO
+      end
+    end
+
     def generate_batch_sql(size)
-      sql = String.new SQL_PREV
-      sql << ([SQL_VALUE] * size).join(',')
+      "INSERT IGNORE INTO `#@table`(`host`,`path`,`pos`,`end`,`data`) VALUES " << (['(?,?,?,?,?)'] * size).join(',')
     end
 
     def get_batch_sql(size)
@@ -60,7 +69,7 @@ module Output
       @mysql.query 'BEGIN'
       begin
         stat = mysql.prepare sql
-        stat.execute sql
+        stat.execute values
         @mysql.query 'COMMIT'
         listener.call
       rescue => err

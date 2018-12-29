@@ -29,13 +29,29 @@ def init_output(conf)
   case
   when conf.key?('output.redis')
     require_relative 'fileminer/output/redis'
-    Output::RedisPlugin.new conf['output.redis'].keys_to_sym
+    redis_conf = conf['output.redis'].keys_to_sym
+    Output::RedisPlugin.new redis_conf
   when conf.key?('output.kafka')
     require_relative 'fileminer/output/kafka'
-    Output::KafkaPlugin.new conf['output.kafka'].keys_to_sym
+    kafka_conf = conf['output.kafka'].keys_to_sym
+    kafka_conf[:mode] = kafka_conf[:mode] == 'async' ? :async : :sync
+    if kafka_conf[:mode] == :async
+      kafka_conf[:auto_delivery] = kafka_conf[:auto_delivery] == 'enabled' ? :enabled : :disabled
+      if kafka_conf[:auto_delivery] == :enabled
+        delivery_threshold = kafka_conf.delete :delivery_threshold
+        delivery_interval = kafka_conf.delete :delivery_interval
+        raise 'Missing conf delivery_threshold or delivery_interval' if delivery_threshold.nil? && delivery_interval.nil?
+        kafka_conf[:delivery_conf] = delivery_conf = Hash.new
+        delivery_conf[:delivery_threshold] = delivery_threshold unless delivery_threshold.nil?
+        delivery_conf[:delivery_interval] = delivery_interval unless delivery_interval.nil?
+      end
+    end
+    Output::KafkaPlugin.new kafka_conf
   when conf.key?('output.mysql')
     require_relative 'fileminer/output/mysql'
-    Output::MysqlPlugin.new conf['output.mysql'].keys_to_sym
+    mysql_conf = conf['output.mysql'].keys_to_sym
+    mysql_conf[:ssl_mode] = mysql_conf[:ssl_mode] == 'enabled' ? :enabled : :disabled
+    Output::MysqlPlugin.new mysql_conf
   else
     raise 'Missing config for output'
   end
@@ -47,7 +63,8 @@ if __FILE__ == $0
   #     ruby fileminer.rb /etc/fileminer/fileminer.yml
   yml = File.open(ARGV[0]) { |io| io.read }
   conf = YAML.load yml
-  # initialize Output
+  # TODO initialize general settings
+  # initialize OutputPlugin
   output = init_output conf
   # initialize Miner
   raise "Missing config #{FILEMINER_INPUTS}" unless conf.key? FILEMINER_INPUTS
