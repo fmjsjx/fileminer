@@ -31,7 +31,9 @@ def init_output(conf)
   case
   when conf.key?('output.redis')
     require_relative 'fileminer/output/redis'
-    return RedisOutputPlugin.new conf['output.redis'].keys_to_sym
+    return Output::RedisPlugin.new conf['output.redis'].keys_to_sym
+  else
+    raise 'Missing config for output'
   end
 end
 

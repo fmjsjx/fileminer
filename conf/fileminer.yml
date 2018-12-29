@@ -51,6 +51,7 @@ output.redis:
   #db: 0
 
   # password of the redis server
+  # effective only if uri is not be set
   #password:
 
   # key of the redis server
