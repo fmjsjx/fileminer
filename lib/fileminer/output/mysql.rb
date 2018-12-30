@@ -41,7 +41,7 @@ module Output
       rs = @mysql.query 'SHOW TABLES'
       tables = rs.map { |row| row.values[0] }
       unless tables.include? @table
-        sql = "CREATE TABLE `#@table` ( `id` INT PRIMARY KEY AUTO_INCREMENT, `host` VARCHAR(255) NOT NULL, `path` VARCHAR(255) NOT NULL, `pos` BIGINT(20) NOT NULL, `end` BIGINT(20) NOT NULL, `data` TEXT NOT NULL, UNIQUE KEY 'UNIQUE_host_path_pos' (`host`, `path`, `pos`)) Engine=InnoDB DEFAULT CHARSET #@encoding"
+        sql = "CREATE TABLE `#@table` ( `id` BIGINT(20) PRIMARY KEY AUTO_INCREMENT, `host` VARCHAR(255) NOT NULL, `path` VARCHAR(255) NOT NULL, `pos` BIGINT(20) NOT NULL, `end` BIGINT(20) NOT NULL, `data` TEXT NOT NULL, UNIQUE KEY 'UNIQUE_host_path_pos' (`host`, `path`, `pos`)) ENGINE=InnoDB DEFAULT CHARSET #@encoding"
         @mysql.query sql
       end
     end
