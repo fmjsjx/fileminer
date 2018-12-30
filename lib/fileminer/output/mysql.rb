@@ -6,8 +6,6 @@ module Output
 
   class MysqlPlugin < OutputPlugin
 
-    SQL_PREV = 
-    SQL_VALUE = 
 
     # Create a mysql output plugin instance
     #
