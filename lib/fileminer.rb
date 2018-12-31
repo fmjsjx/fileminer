@@ -25,15 +25,44 @@ class Hash
 end
 
 
-def init_output(conf)
-  case
-  when conf.key?('output.redis')
+class FileMiner
+
+  # Create a new FileMiner instance
+  #
+  # @param [Hash] conf
+  def initialize(conf)
+    # TODO settings
+    @outout = init_output conf
+    aise "Missing config fileminer.inputs" unless conf.key? 'fileminer.inputs'
+    @miner = Miner.new conf['fileminer.inputs'].keys_to_sym
+    @miner.refresh_file_list
+    @miner.save_registry
+  end
+
+  private
+  def init_output(conf)
+    case
+    when conf.key?('output.redis')
+      redis_conf = conf['output.redis'].keys_to_sym
+      init_output_redis redis_conf
+    when conf.key?('output.kafka')
+      kafka_conf = conf['output.kafka'].keys_to_sym
+      init_output_kafka kafka_conf
+    when conf.key?('output.mysql')
+      mysql_conf = conf['output.mysql'].keys_to_sym
+      init_output_mysql mysql_conf
+    else
+      raise 'Missing config for output'
+    end
+  end
+
+  def init_output_redis(redis_conf)
     require_relative 'fileminer/output/redis'
-    redis_conf = conf['output.redis'].keys_to_sym
     Output::RedisPlugin.new redis_conf
-  when conf.key?('output.kafka')
+  end
+
+  def init_output_kafka(kafka_conf)
     require_relative 'fileminer/output/kafka'
-    kafka_conf = conf['output.kafka'].keys_to_sym
     kafka_conf[:mode] = kafka_conf[:mode] == 'async' ? :async : :sync
     if kafka_conf[:mode] == :async
       kafka_conf[:auto_delivery] = kafka_conf[:auto_delivery] == 'enabled' ? :enabled : :disabled
@@ -47,15 +76,60 @@ def init_output(conf)
       end
     end
     Output::KafkaPlugin.new kafka_conf
-  when conf.key?('output.mysql')
+  end
+
+  def init_output_mysql(mysql_conf)
     require_relative 'fileminer/output/mysql'
-    mysql_conf = conf['output.mysql'].keys_to_sym
     mysql_conf[:ssl_mode] = mysql_conf[:ssl_mode] == 'enabled' ? :enabled : :disabled
     Output::MysqlPlugin.new mysql_conf
+  end
+
+end
+
+def init_output(conf)
+  case
+  when conf.key?('output.redis')
+    redis_conf = conf['output.redis'].keys_to_sym
+    init_output_redis redis_conf
+  when conf.key?('output.kafka')
+    kafka_conf = conf['output.kafka'].keys_to_sym
+    init_output_kafka kafka_conf
+  when conf.key?('output.mysql')
+    mysql_conf = conf['output.mysql'].keys_to_sym
+    init_output_mysql mysql_conf
   else
     raise 'Missing config for output'
   end
 end
+
+def init_output_redis(redis_conf)
+  require_relative 'fileminer/output/redis'
+  Output::RedisPlugin.new redis_conf
+end
+
+def init_output_kafka(kafka_conf)
+  require_relative 'fileminer/output/kafka'
+  kafka_conf[:mode] = kafka_conf[:mode] == 'async' ? :async : :sync
+  if kafka_conf[:mode] == :async
+    kafka_conf[:auto_delivery] = kafka_conf[:auto_delivery] == 'enabled' ? :enabled : :disabled
+    if kafka_conf[:auto_delivery] == :enabled
+      delivery_threshold = kafka_conf.delete :delivery_threshold
+      delivery_interval = kafka_conf.delete :delivery_interval
+      raise 'Missing conf delivery_threshold or delivery_interval' if delivery_threshold.nil? && delivery_interval.nil?
+      kafka_conf[:delivery_conf] = delivery_conf = Hash.new
+      delivery_conf[:delivery_threshold] = delivery_threshold unless delivery_threshold.nil?
+      delivery_conf[:delivery_interval] = delivery_interval unless delivery_interval.nil?
+    end
+  end
+  Output::KafkaPlugin.new kafka_conf
+end
+
+def init_output_mysql(mysql_conf)
+  require_relative 'fileminer/output/mysql'
+  mysql_conf[:ssl_mode] = mysql_conf[:ssl_mode] == 'enabled' ? :enabled : :disabled
+  Output::MysqlPlugin.new mysql_conf
+end
+
 
 
 if __FILE__ == $0
