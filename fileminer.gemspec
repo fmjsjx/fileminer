@@ -8,4 +8,5 @@ Gem::Specification.new do |s|
   s.files       = ['LICENSE', 'README.md', 'lib/**/*']
   s.homepage    = 'https://github.com/fmjsjx/fileminer'
   s.license     = 'MIT'
+  s.executables << 'fileminer'
 end
