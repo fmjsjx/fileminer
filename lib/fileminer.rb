@@ -27,16 +27,19 @@ end
 
 class FileMiner
 
+  attr_reader :miner, :output, :running
+
   # Create a new FileMiner instance
   #
   # @param [Hash] conf
   def initialize(conf)
     # TODO settings
-    @outout = init_output conf
-    aise "Missing config fileminer.inputs" unless conf.key? 'fileminer.inputs'
+    @output = init_output conf
+    raise "Missing config fileminer.inputs" unless conf.key? 'fileminer.inputs'
     @miner = Miner.new conf['fileminer.inputs'].keys_to_sym
     @miner.refresh_file_list
     @miner.save_registry
+    @running = false
   end
 
   private
@@ -86,25 +89,32 @@ class FileMiner
 
   public
   def mine_once
-    miner.file_list.select do |record|
+    @miner.file_list.select do |record|
       !record[:eof] && record[:pos] < File.size(record[:path])
-    end.any? do |record|
-      lines = miner.read_lines record
-      return false if lines.empty?
-      if output.batch?
-        output.send_all lines do
+    end.sum do |record|
+      lines = @miner.read_lines record
+      return 0 if lines.empty?
+      if @output.batch?
+        @output.send_all lines do
           record[:pos] = lines[-1][:end]
-          miner.save_registry
+          @miner.save_registry
         end
       else
         lines.each do |line|
-          output.send line do
+          @output.send line do
             record[:pos] = line[:end]
-            miner.save_registry
+            @miner.save_registry
           end
         end
       end
-      return true
+      lines.size
+    end
+  end
+
+  def start_mining
+    unless @running
+      @running = true
+      # TODO
     end
   end
 
@@ -162,6 +172,10 @@ if __FILE__ == $0
   #     ruby fileminer.rb /etc/fileminer/fileminer.yml
   yml = File.open(ARGV[0]) { |io| io.read }
   conf = YAML.load yml
+  fileminer = FileMiner.new conf
+  line_size = fileminer.mine_once
+  puts line_size
+  exit
   # TODO initialize general settings
   # initialize OutputPlugin
   output = init_output conf
