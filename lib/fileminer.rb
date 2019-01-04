@@ -87,27 +87,34 @@ class FileMiner
     Output::MysqlPlugin.new mysql_conf
   end
 
+  def send_lines(record, lines)
+    if @output.batch?
+      @output.send_all lines do
+        record[:pos] = lines[-1][:end]
+        @miner.save_registry
+      end
+    else
+      lines.each do |line|
+        @output.send line do
+          record[:pos] = line[:end]
+          @miner.save_registry
+        end
+      end
+    end
+  end
+
   public
   def mine_once
     @miner.file_list.select do |record|
       !record[:eof] && record[:pos] < File.size(record[:path])
     end.sum do |record|
-      lines = @miner.read_lines record
-      return 0 if lines.empty?
-      if @output.batch?
-        @output.send_all lines do
-          record[:pos] = lines[-1][:end]
-          @miner.save_registry
-        end
-      else
-        lines.each do |line|
-          @output.send line do
-            record[:pos] = line[:end]
-            @miner.save_registry
-          end
-        end
+      sent_lines = 0
+      loop do
+        lines = @miner.read_lines record
+        return sent_lines if lines.empty?
+        send_lines record, lines
+        sent_lines += lines.size
       end
-      lines.size
     end
   end
 
