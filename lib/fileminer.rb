@@ -105,8 +105,8 @@ class FileMiner
 
   public
   def mine_once
-    @miner.file_list.select do |record|
-      !record[:eof] && record[:pos] < File.size(record[:path])
+    @miner.active_files.select do |record|
+      record[:pos] < File.size(record[:path])
     end.sum do |record|
       sent_lines = 0
       loop do
@@ -114,6 +114,7 @@ class FileMiner
         return sent_lines if lines.empty?
         send_lines record, lines
         sent_lines += lines.size
+        return sent_lines if lines.size < @miner.batch_lines
       end
     end
   end

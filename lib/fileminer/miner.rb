@@ -28,7 +28,7 @@ class Miner
     batch_lines: 50,
   }
 
-  attr_reader :registry_path, :paths, :eof_seconds, :file_list
+  attr_reader :registry_path, :paths, :eof_seconds, :batch_lines, :files
 
   # Create a new file miner instance
   #
@@ -50,9 +50,11 @@ class Miner
       require 'socket'
       @host = Socket.gethostname
     end
-    @file_list = []
+    @files = []
+    @active_files = []
     if File.exist? @registry_path
-      File.open(@registry_path) { |io| @file_list = JSON.parse(io.read, {symbolize_names: true}) }
+      File.open(@registry_path) { |io| @files = JSON.parse(io.read, {symbolize_names: true}) }
+      @active_files = @files.select { |record| !record[:eof] }
     else
       parent_dir = File.dirname @registry_path
       Dir.mkdirs parent_dir unless Dir.exist? parent_dir
@@ -61,19 +63,19 @@ class Miner
 
   # Save registry
   def save_registry
-    File.open(@registry_path, 'w') { |io| io.write @file_list.to_json }
+    File.open(@registry_path, 'w') { |io| io.write @files.to_json }
   end
 
   # Refresh
-  def refresh_file_list
-    file_paths = Set.new
+  def refresh_files
+    paths = Set.new
     @paths.each do |path|
-      file_paths.merge Dir[path].select { |path| File.file? path }
+      paths.merge Dir[path].select { |path| File.file? path }
     end
-    @file_list.each do |record|
+    @active_file = @files.select do |record|
       path = record[:path]
       unless record[:eof]
-        if file_paths.delete? path
+        if paths.delete? path
           # check if EOF
           if record[:pos] == File.size(path) && Time.now - File.mtime(path) > @eof_seconds
             record[:eof] = true
@@ -83,12 +85,14 @@ class Miner
           record[:eof] = true
         end
       end
+      !record[:eof]
     end
-    file_paths.each do |path|
+    paths.each do |path|
       record = {path: path, pos: 0, eof: false}
-      @file_list << record
+      @files << record
+      @active_files << record
     end
-    @file_list_refresh_time = Time.now
+    @files_refresh_time = Time.now
   end
 
   # Read lines

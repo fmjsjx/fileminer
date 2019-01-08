@@ -1,5 +1,9 @@
 # general settings
-#fileminer.settings:
+fileminer.settings:
+
+  refresh_files_time_trigger: 30s
+
+  #max_lines_mining_once: -1
   # TODO
 
 # fileminer inputs
