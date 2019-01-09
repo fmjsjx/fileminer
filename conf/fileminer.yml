@@ -1,8 +1,15 @@
 # general settings
 fileminer.settings:
 
-  # refresh files time trigger
-  refresh_files_time_trigger: 5min
+  refresh_files_time_trigger: 30s
+
+  max_time_of_each_mining: 5s
+
+  # default value is -1
+  #max_lines_of_each_mining: -1
+
+  # default value is -1
+  #max_lines_of_each_file: -1
 
   # TODO
 

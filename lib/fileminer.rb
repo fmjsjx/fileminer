@@ -49,24 +49,30 @@ class FileMiner
     @logger = Logger.new STDOUT
     @logger.level = Logger::WARN
     # refresh_files_time_trigger
-    rftt = conf['refresh_files_time_trigger']
-    raise 'Missing config refresh_files_time_trigger on fileminer.settings' if rftt.nil?
-    if /^(\d+)(\w+)$/ =~ rftt
+    @refresh_files_time_trigger = parse_time conf['refresh_files_time_trigger'], 'refresh_files_time_trigger on fileminer.settings'
+  end
+
+  def parse_time(value, conf_name)
+    raise "Missing config #{conf_name}" if value.nil?
+    if /^(\d+)(\w+)$/ =~ value
       num = $1.to_i
       unit = $2
       case unit
+      when 'd'
+        num * 86400
       when 'h'
-        @refresh_files_time_trigger = num * 3600
+        num * 3600
       when 'min'
-        @refresh_files_time_trigger = num * 60
+        num * 60
       when 's'
-        @refresh_files_time_trigger = num
+        num
       when 'ms'
-        @refresh_files_time_trigger = num / 1000.0
+        num.to_f / 1000
       else
-        raise "Unsupported time unit(#{unit}) of refresh_files_time_trigger on fileminer.settings"
+        raise "Unsupported time unit '#{unit}' of #{conf_name}"
+      end
     else
-      raise "Error format(#{rftt}) of refresh_files_time_trigger on fileminer.settings"
+      raise "Error format '#{value}' of #{conf_name}"
     end
   end
 
