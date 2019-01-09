@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 
+require 'logger'
 require 'yaml'
 require 'socket'
 require_relative 'fileminer/miner'
@@ -33,9 +34,9 @@ class FileMiner
   #
   # @param [Hash] conf
   def initialize(conf)
-    # TODO settings
+    init_settings conf['fileminer.settings'] if conf.key? 'fileminer.settings'
     @output = init_output conf
-    raise "Missing config fileminer.inputs" unless conf.key? 'fileminer.inputs'
+    raise 'Missing config fileminer.inputs' unless conf.key? 'fileminer.inputs'
     @miner = Miner.new conf['fileminer.inputs'].keys_to_sym
     @miner.refresh_file_list
     @miner.save_registry
@@ -43,6 +44,32 @@ class FileMiner
   end
 
   private
+  def init_settings(conf)
+    # default logger to stdout
+    @logger = Logger.new STDOUT
+    @logger.level = Logger::WARN
+    # refresh_files_time_trigger
+    rftt = conf['refresh_files_time_trigger']
+    raise 'Missing config refresh_files_time_trigger on fileminer.settings' if rftt.nil?
+    if /^(\d+)(\w+)$/ =~ rftt
+      num = $1.to_i
+      unit = $2
+      case unit
+      when 'h'
+        @refresh_files_time_trigger = num * 3600
+      when 'min'
+        @refresh_files_time_trigger = num * 60
+      when 's'
+        @refresh_files_time_trigger = num
+      when 'ms'
+        @refresh_files_time_trigger = num / 1000.0
+      else
+        raise "Unsupported time unit(#{unit}) of refresh_files_time_trigger on fileminer.settings"
+    else
+      raise "Error format(#{rftt}) of refresh_files_time_trigger on fileminer.settings"
+    end
+  end
+
   def init_output(conf)
     case
     when conf.key?('output.redis')
@@ -122,57 +149,25 @@ class FileMiner
   def start_mining
     unless @running
       @running = true
-      # TODO
+      while @running
+        begin
+          @miner.refresh_file_list if @miner.files_need_refresh? @refresh_files_time_trigger
+          sent_lines = mine_once
+          # sleep 5 seconds if no more data
+          # TODO using settings instead in future
+          sleep 5 if sent_lines == 0
+        rescue => e
+          @logger.error e
+        end
+      end
     end
   end
 
-end
-
-
-def init_output(conf)
-  case
-  when conf.key?('output.redis')
-    redis_conf = conf['output.redis'].keys_to_sym
-    init_output_redis redis_conf
-  when conf.key?('output.kafka')
-    kafka_conf = conf['output.kafka'].keys_to_sym
-    init_output_kafka kafka_conf
-  when conf.key?('output.mysql')
-    mysql_conf = conf['output.mysql'].keys_to_sym
-    init_output_mysql mysql_conf
-  else
-    raise 'Missing config for output'
+  def stop_mining
+    @running = false if @running
   end
-end
 
-def init_output_redis(redis_conf)
-  require_relative 'fileminer/output/redis'
-  Output::RedisPlugin.new redis_conf
 end
-
-def init_output_kafka(kafka_conf)
-  require_relative 'fileminer/output/kafka'
-  kafka_conf[:mode] = kafka_conf[:mode] == 'async' ? :async : :sync
-  if kafka_conf[:mode] == :async
-    kafka_conf[:auto_delivery] = kafka_conf[:auto_delivery] == 'enabled' ? :enabled : :disabled
-    if kafka_conf[:auto_delivery] == :enabled
-      delivery_threshold = kafka_conf.delete :delivery_threshold
-      delivery_interval = kafka_conf.delete :delivery_interval
-      raise 'Missing conf delivery_threshold or delivery_interval' if delivery_threshold.nil? && delivery_interval.nil?
-      kafka_conf[:delivery_conf] = delivery_conf = Hash.new
-      delivery_conf[:delivery_threshold] = delivery_threshold unless delivery_threshold.nil?
-      delivery_conf[:delivery_interval] = delivery_interval unless delivery_interval.nil?
-    end
-  end
-  Output::KafkaPlugin.new kafka_conf
-end
-
-def init_output_mysql(mysql_conf)
-  require_relative 'fileminer/output/mysql'
-  mysql_conf[:ssl_mode] = mysql_conf[:ssl_mode] == 'enabled' ? :enabled : :disabled
-  Output::MysqlPlugin.new mysql_conf
-end
-
 
 
 if __FILE__ == $0
@@ -181,47 +176,6 @@ if __FILE__ == $0
   yml = File.open(ARGV[0]) { |io| io.read }
   conf = YAML.load yml
   fileminer = FileMiner.new conf
-  line_size = fileminer.mine_once
-  puts line_size
-  exit
-  # TODO initialize general settings
-  # initialize OutputPlugin
-  output = init_output conf
-  # initialize Miner
-  raise "Missing config #{FILEMINER_INPUTS}" unless conf.key? FILEMINER_INPUTS
-  miner_options = conf[FILEMINER_INPUTS].keys_to_sym
-  miner = Miner.new miner_options
-  miner.refresh_file_list
-  miner.save_registry
-  # TODO development test
-  any_read = false
-  miner.file_list.select do |record|
-    !record[:eof] && record[:pos] < File.size(record[:path])
-  end.each do |record|
-    lines = miner.read_lines record
-    return if lines.empty?
-    any_read |= true
-    if output.batch?
-      output.send_all lines do
-        record[:pos] = lines[-1][:end]
-        miner.save_registry
-      end
-    else
-      lines.each do |line|
-        output.send line do
-          record[:pos] = line[:end]
-          miner.save_registry
-        end
-      end
-    end
-  end
-  puts any_read
-  # exit here for test
-  exit
-  # start loop
-  running = true
-  trap(:INT) { running = false }
-  while running 
-    # TODO
-  end
+  trap(:INT) { fileminer.stop_mining }
+  fileminer.start_mining
 end

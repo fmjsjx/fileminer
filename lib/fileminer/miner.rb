@@ -28,7 +28,7 @@ class Miner
     batch_lines: 50,
   }
 
-  attr_reader :registry_path, :paths, :eof_seconds, :batch_lines, :files
+  attr_reader :registry_path, :paths, :eof_seconds, :batch_lines, :files, :active_files
 
   # Create a new file miner instance
   #
@@ -119,6 +119,10 @@ class Miner
       end
       lines
     end
+  end
+
+  def files_need_refresh?(refresh_files_time_trigger)
+    Time.now - @files_refresh_time >= refresh_files_time_trigger
   end
 
 end
