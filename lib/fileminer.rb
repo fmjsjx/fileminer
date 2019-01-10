@@ -28,13 +28,20 @@ end
 
 class FileMiner
 
+  DEFAULT_SETTINGS = {
+    refresh_files_time_trigger: '30s',
+    max_time_of_each_mining: '5s',
+    max_lines_of_each_mining: -1,
+    max_lines_of_each_file: -1, 
+  }
+
   attr_reader :miner, :output, :running
 
   # Create a new FileMiner instance
   #
   # @param [Hash] conf
   def initialize(conf)
-    init_settings conf['fileminer.settings'] if conf.key? 'fileminer.settings'
+    init_settings conf['fileminer.settings']
     @output = init_output conf
     raise 'Missing config fileminer.inputs' unless conf.key? 'fileminer.inputs'
     @miner = Miner.new conf['fileminer.inputs'].keys_to_sym
@@ -45,15 +52,34 @@ class FileMiner
 
   private
   def init_settings(conf)
+    if conf.nil?
+      conf = DEFAULT_SETTINGS.clone
+    else
+      conf = DEFAULT_SETTINGS.merge conf.keys_to_sym
+    end
     # default logger to stdout
     @logger = Logger.new STDOUT
     @logger.level = Logger::WARN
+    # mining break trigger
+    max_time_of_each_mining = parse_time conf[:max_time_of_each_mining]
+    max_lines_of_each_mining = conf[:max_lines_of_each_mining]
+    if max_lines_of_each_mining >= 0
+      @mining_break_trigger = lambda { |start_time, lines| Time.now - start_time > max_time_of_each_mining || lines >= max_lines_of_each_mining }
+    else
+      @mining_break_trigger = lambda { |start_time, lines| Time.now - start_time > max_time_of_each_mining }
+    end
+    # file break trigger
+    max_lines_of_each_file = conf[:max_lines_of_each_file]
+    if max_lines_of_each_file >= 0
+      @file_break_trigger = lambda { |lines| lines < @miner.batch_lines || lines >= max_lines_of_each_file }
+    else
+      @file_break_trigger = lambda { |lines| lines < @miner.batch_lines }
+    end
     # refresh_files_time_trigger
-    @refresh_files_time_trigger = parse_time conf['refresh_files_time_trigger'], 'refresh_files_time_trigger on fileminer.settings'
+    @refresh_files_time_trigger = parse_time conf[:refresh_files_time_trigger], 'refresh_files_time_trigger on fileminer.settings'
   end
 
   def parse_time(value, conf_name)
-    raise "Missing config #{conf_name}" if value.nil?
     if /^(\d+)(\w+)$/ =~ value
       num = $1.to_i
       unit = $2
@@ -74,6 +100,14 @@ class FileMiner
     else
       raise "Error format '#{value}' of #{conf_name}"
     end
+  end
+
+  def mining_break?(start_time, lines)
+    @mining_break_trigger.call start_time, lines
+  end
+
+  def file_break?(lines)
+    @file_break_trigger.call lines
   end
 
   def init_output(conf)
@@ -138,18 +172,24 @@ class FileMiner
 
   public
   def mine_once
+    start_time = Time.now
+    broken = false
+    full_lines = 0
     @miner.active_files.select do |record|
       record[:pos] < File.size(record[:path])
-    end.sum do |record|
-      sent_lines = 0
+    end.all? do |record|
+      file_lines = 0
       loop do
         lines = @miner.read_lines record
-        return sent_lines if lines.empty?
+        return true if lines.empty?
         send_lines record, lines
-        sent_lines += lines.size
-        return sent_lines if lines.size < @miner.batch_lines
+        file_lines += lines.size
+        full_lines += lines.size
+        return false if broken = mining_break? start_time, full_lines
+        return true if file_break? file_lines
       end
     end
+    full_lines
   end
 
   def start_mining
