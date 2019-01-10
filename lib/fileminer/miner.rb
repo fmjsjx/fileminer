@@ -68,16 +68,16 @@ class Miner
 
   # Refresh
   def refresh_files
-    paths = Set.new
-    @paths.each do |path|
-      paths.merge Dir[path].select { |path| File.file? path }
-    end
+    now = Time.now
+    file_paths = Set.new
+    file_paths.merge Dir[*@paths].select { |path| File.file? path }
     @active_file = @files.select do |record|
       path = record[:path]
+      file_exists = file_paths.delete? path
       unless record[:eof]
-        if paths.delete? path
+        if file_exists
           # check if EOF
-          if record[:pos] == File.size(path) && Time.now - File.mtime(path) > @eof_seconds
+          if record[:pos] == File.size(path) && now - File.mtime(path) > @eof_seconds
             record[:eof] = true
           end
         else
@@ -87,12 +87,12 @@ class Miner
       end
       !record[:eof]
     end
-    paths.each do |path|
+    file_paths.each do |path|
       record = {path: path, pos: 0, eof: false}
       @files << record
       @active_files << record
     end
-    @files_refresh_time = Time.now
+    @files_refresh_time = now
   end
 
   # Read lines

@@ -3,6 +3,7 @@ fileminer.settings:
 
   refresh_files_time_trigger: 30s
 
+  # default value is 5s
   max_time_of_each_mining: 5s
 
   # default value is -1

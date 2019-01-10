@@ -164,6 +164,8 @@ class FileMiner
           sleep 5 if sent_lines == 0
         rescue => e
           @logger.error e
+          # sleep for a little while to wait output recover
+          sleep 5 if @running
         end
       end
     end
