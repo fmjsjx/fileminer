@@ -45,7 +45,7 @@ class FileMiner
     @output = init_output conf
     raise 'Missing config fileminer.inputs' unless conf.key? 'fileminer.inputs'
     @miner = Miner.new conf['fileminer.inputs'].keys_to_sym
-    @miner.refresh_file_list
+    @miner.refresh_files
     @miner.save_registry
     @running = false
   end
@@ -61,7 +61,7 @@ class FileMiner
     @logger = Logger.new STDOUT
     @logger.level = Logger::WARN
     # mining break trigger
-    max_time_of_each_mining = parse_time conf[:max_time_of_each_mining]
+    max_time_of_each_mining = parse_time conf[:max_time_of_each_mining], 'max_time_of_each_mining on fileminer.settings'
     max_lines_of_each_mining = conf[:max_lines_of_each_mining]
     if max_lines_of_each_mining >= 0
       @mining_break_trigger = lambda { |start_time, lines| Time.now - start_time > max_time_of_each_mining || lines >= max_lines_of_each_mining }
@@ -173,21 +173,25 @@ class FileMiner
   public
   def mine_once
     start_time = Time.now
-    broken = false
     full_lines = 0
-    @miner.active_files.select do |record|
-      record[:pos] < File.size(record[:path])
-    end.all? do |record|
-      file_lines = 0
-      loop do
-        lines = @miner.read_lines record
-        return true if lines.empty?
-        send_lines record, lines
-        file_lines += lines.size
-        full_lines += lines.size
-        return false if broken = mining_break? start_time, full_lines
-        return true if file_break? file_lines
+    @miner.active_files.all? do |record|
+      mining_next = true
+      if record[:pos] < File.size(record[:path])
+        file_lines = 0
+        loop do
+          lines = @miner.read_lines record
+          break if lines.empty?
+          send_lines record, lines
+          file_lines += lines.size
+          full_lines += lines.size
+          if mining_break? start_time, full_lines
+            mining_next = false
+            break
+          end
+          break if file_break? file_lines
+        end
       end
+      mining_next
     end
     full_lines
   end
@@ -197,7 +201,7 @@ class FileMiner
       @running = true
       while @running
         begin
-          @miner.refresh_file_list if @miner.files_need_refresh? @refresh_files_time_trigger
+          @miner.refresh_files if @miner.files_need_refresh? @refresh_files_time_trigger
           sent_lines = mine_once
           # sleep 5 seconds if no more data
           # TODO using settings instead in future
