@@ -1,1 +1,31 @@
 #!/usr/bin/env ruby
+
+
+require 'logger'
+require 'yaml'
+require 'fileminer'
+
+
+logger = Logger.new STDERR
+
+begin
+  # Usage:
+  #   ruby -Ilib ./bin/fileminer /path/to/fileminer.yml
+  yml = File.open(ARGV[0]) { |io| io.read }
+  conf = YAML.load yml
+  # create fileminer instance
+  fileminer = FileMiner.new conf
+
+  # trap INT signal to stop mining
+  trap(:INT) { fileminer.stop_mining }
+
+  # start mining
+  fileminer.start_mining
+rescue => e
+  logger.error e
+  usage = <<-EOS
+  Usage:
+    ruby -Ilib ./bin/fileminer /path/to/fileminer.yml
+  EOS
+  puts usage
+end

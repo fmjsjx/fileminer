@@ -2,8 +2,6 @@
 
 
 require 'logger'
-require 'yaml'
-require 'socket'
 require_relative 'fileminer/miner'
 require_relative 'fileminer/plugins'
 
@@ -57,8 +55,9 @@ class FileMiner
     else
       conf = DEFAULT_SETTINGS.merge conf.keys_to_sym
     end
-    # default logger to stdout
-    @logger = Logger.new STDOUT
+    # default logger to stderr
+    # TODO make logger configurable in future
+    @logger = Logger.new STDERR
     @logger.level = Logger::WARN
     # mining break trigger
     max_time_of_each_mining = parse_time conf[:max_time_of_each_mining], 'max_time_of_each_mining on fileminer.settings'
@@ -225,6 +224,7 @@ end
 if __FILE__ == $0
   # Usage:
   #     ruby fileminer.rb /etc/fileminer/fileminer.yml
+  require 'yaml'
   yml = File.open(ARGV[0]) { |io| io.read }
   conf = YAML.load yml
   fileminer = FileMiner.new conf
