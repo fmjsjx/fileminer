@@ -6,6 +6,13 @@ module Output
 
   class MysqlPlugin < OutputPlugin
 
+    DEFAULT_MYSQL = {
+      host: 'localhost',
+      port: 3306,
+      password: '',
+      encoding: 'utf8mb4',
+      ssl_mode: :disabled
+    }
 
     # Create a mysql output plugin instance
     #
@@ -22,13 +29,12 @@ module Output
       raise 'Missing config username on output.mysql' unless options.key? :username
       raise 'Missing config database on output.mysql' unless options.key? :database
       raise 'Missing config table on output.mysql' unless options.key? :table
-      conf = Hash[options]
+      conf = DEFAULT_MYSQL.merge options
       @table = conf.delete :table
-      conf[:host] = 'localhost' unless options.key? :host
-      conf[:port] = 3306 unless options.key? :port
-      conf[:password] = '' unless options.key? :password
-      @encoding = conf[:encoding] = 'utf8mb4' unless options.key? :encoding
-      conf[:ssl_mode] = :disabled unless options.key? :ssl_mode
+      conf[:port] = conf[:port].to_i
+      conf[:password] = conf[:password].to_s
+      @encoding = conf[:encoding]
+      conf[:ssl_mode] = :disabled if conf[:ssl_mode] != :enabled
       @mysql = Mysql2::Client.new conf
       create_table_if_not_exists
       @sqls = Hash.new { |hash, key| hash[key] = generate_batch_sql key }
@@ -41,14 +47,14 @@ module Output
       unless tables.include? @table
         sql = <<-EOS
           CREATE TABLE `#@table` (
-            `id` BIGINT(20) PRIMARY KEY AUTO_INCREMENT,
-            `host` VARCHAR(255) NOT NULL,
-            `path` VARCHAR(255) NOT NULL,
-            `pos` BIGINT(20) NOT NULL,
-            `end` BIGINT(20) NOT NULL,
-            `data` TEXT NOT NULL,
-            UNIQUE KEY 'UNIQUE_host_path_pos' (`host`, `path`, `pos`)
-          ) ENGINE=InnoDB DEFAULT CHARSET #@encoding
+            `id` bigint(20) PRIMARY KEY AUTO_INCREMENT,
+            `host` varchar(255) NOT NULL,
+            `path` varchar(255) NOT NULL,
+            `pos` bigint(20) NOT NULL,
+            `end` bigint(20) NOT NULL,
+            `data` text NOT NULL,
+            UNIQUE KEY `UNIQUE_host_path_pos` (`host`,`path`,`pos`)
+          ) ENGINE=InnoDB DEFAULT CHARSET=#@encoding
         EOS
         @mysql.query sql
       end
@@ -73,11 +79,11 @@ module Output
     public
     def send_all(lines, &listener)
       values = lines.flat_map { |line| [line[:host], line[:path], line[:pos], line[:end], line[:data]] }
-      sql = get_batch_sql line.size
+      sql = get_batch_sql lines.size
       @mysql.query 'BEGIN'
       begin
-        stat = mysql.prepare sql
-        stat.execute values
+        stat = @mysql.prepare sql
+        stat.execute *values
         @mysql.query 'COMMIT'
         listener.call
       rescue => err
