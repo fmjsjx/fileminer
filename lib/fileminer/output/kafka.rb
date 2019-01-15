@@ -18,7 +18,7 @@ module Output
     # @option options [Hash] :delivery_conf
     def initialize(options)
       brokers = options[:brokers] || ['localhost:9092']
-      clinet_id = options[:client_id] || 'fileminer'
+      client_id = options[:client_id] || 'fileminer'
       @topic = options[:topic] || 'fileminer'
       @kafka = Kafka.new(brokers, client_id: client_id)
       case @mode = options[:mode]

@@ -200,17 +200,27 @@ class FileMiner
       @running = true
       while @running
         begin
-          @miner.refresh_files if @miner.files_need_refresh? @refresh_files_time_trigger
+          files_refreshed = check_files
           sent_lines = mine_once
           # sleep 5 seconds if no more data
           # TODO using settings instead in future
-          sleep 5 if sent_lines == 0
+          if sent_lines == 0
+            @miner.save_registry if files_refreshed
+            sleep 5
+          end
         rescue => e
           @logger.error e
           # sleep for a little while to wait output recover
           sleep 5 if @running
         end
       end
+      @miner.save_registry
+    end
+  end
+
+  def check_files
+    if @miner.files_need_refresh? @refresh_files_time_trigger
+      @miner.refresh_files
     end
   end
 
