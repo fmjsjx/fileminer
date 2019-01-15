@@ -76,10 +76,10 @@ output.redis:
 # output to kafka
 # based on ruby-kafka, please make sure that ruby-kafka has already been installed
 # install ruby-kafka: gem install ruby-kafka
-#output.kafka
+#output.kafka:
   # kafka brokers
-  # default value is [localhost:9092]
-  #brokers: [localhost:9092]
+  # default value is ['localhost:9092']
+  #brokers: ['localhost:9092']
 
   # producer client_id
   # default value is fileminer
@@ -112,7 +112,7 @@ output.redis:
 # output to mysql
 # based on mysql2, please make sure that mysql2 has already been installed
 # install ruby-kafka: gem install mysql2
-#output.mysql
+#output.mysql:
   # host
   # default value is localhost
   #host: localhost
