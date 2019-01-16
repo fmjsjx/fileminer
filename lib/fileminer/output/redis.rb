@@ -22,8 +22,10 @@ module Output
         uri = parse_uri options
       end
       @key = options[:key]
-      raise 'Missing key config on output.redis' if @key.nil?      
-      @redis = Redis.new url: uri
+      raise 'Missing key config on output.redis' if @key.nil?
+      driver = require_lib?('hiredis') ? :hiredis : :ruby
+      puts "driver: #{driver}"
+      @redis = Redis.new url: uri, driver: driver
     end
 
     private
@@ -38,6 +40,13 @@ module Output
         "redis://:#{password}@#{host}:#{port}/#{db}"
       end
     end
+
+    def require_lib?(name)
+      require name
+    rescue LoadError
+      false
+    end
+
 
     # Send all lines to redis using LPUSH @key
     #

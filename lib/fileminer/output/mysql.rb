@@ -45,19 +45,23 @@ module Output
       rs = @mysql.query 'SHOW TABLES'
       tables = rs.map { |row| row.values[0] }
       unless tables.include? @table
-        sql = <<-EOS
-          CREATE TABLE `#@table` (
-            `id` bigint(20) PRIMARY KEY AUTO_INCREMENT,
-            `host` varchar(255) NOT NULL,
-            `path` varchar(255) NOT NULL,
-            `pos` bigint(20) NOT NULL,
-            `end` bigint(20) NOT NULL,
-            `data` text NOT NULL,
-            UNIQUE KEY `UNIQUE_host_path_pos` (`host`,`path`,`pos`)
-          ) ENGINE=InnoDB DEFAULT CHARSET=#@encoding
-        EOS
+        sql = create_table_sql
         @mysql.query sql
       end
+    end
+
+    def create_table_sql
+      <<-EOS
+        CREATE TABLE `#@table` (
+          `id` bigint(20) PRIMARY KEY AUTO_INCREMENT,
+          `host` varchar(255) NOT NULL,
+          `path` varchar(255) NOT NULL,
+          `pos` bigint(20) NOT NULL,
+          `end` bigint(20) NOT NULL,
+          `data` text NOT NULL,
+          UNIQUE KEY `UNIQUE_host_path_pos` (`host`,`path`,`pos`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=#@encoding
+      EOS
     end
 
     def generate_batch_sql(size)
