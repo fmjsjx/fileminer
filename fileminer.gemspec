@@ -11,6 +11,8 @@ Gem::Specification.new do |spec|
   spec.homepage      = 'https://github.com/fmjsjx/fileminer'
   spec.license       = 'MIT'
 
+  spec.required_ruby_version = '>= 2.3.0'
+
   spec.files         = Dir['LICENSE', 'README.md', 'lib/**/*', 'bin/*', 'conf/*.yml']
   spec.bindir        = 'bin'
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
