@@ -25,7 +25,7 @@ class Miner
   DEFAULTS = {
     registry_path: '/var/lib/fileminer/registry',
     eof_seconds: 86400,
-    batch_lines: 50,
+    batch_lines: 200,
   }
 
   attr_reader :registry_path, :paths, :eof_seconds, :batch_lines, :files, :active_files

@@ -24,7 +24,6 @@ module Output
       @key = options[:key]
       raise 'Missing key config on output.redis' if @key.nil?
       driver = require_lib?('hiredis') ? :hiredis : :ruby
-      puts "driver: #{driver}"
       @redis = Redis.new url: uri, driver: driver
     end
 

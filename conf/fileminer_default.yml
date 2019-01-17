@@ -34,8 +34,8 @@ fileminer.inputs:
   #eof_seconds: 86400
 
   # Batch lines to read
-  # default value is 50
-  #batch_lines: 50
+  # default value is 200
+  #batch_lines: 200
 
   # Host
   # default value is `Socket.gethostname`
