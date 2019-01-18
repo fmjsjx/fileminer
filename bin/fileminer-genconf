@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+
+
+require_relative '../lib/fileminer/tools/io'
+
+current_path = File.absolute_path __FILE__
+bin_path = File.dirname current_path
+project_path = File.dirname bin_path
+default_file_path = File.join project_path, 'conf', 'fileminer_default.yml'
+
+dst =  ARGV.empty? ? '/etc/fileminer/fileminer.yml' : File.absolute_path(ARGV[0])
+unless dst.end_with?('.yml') || dst.end_with?('.yaml')
+  dst = File.join dst, 'fileminer.yml'
+end
+
+dst_dir = File.dirname dst
+Dir.mkdirs dst_dir unless Dir.exist? dst_dir
+
+File.copy_stream default_file_path, dst
+puts "generated config file: #{dst}"
