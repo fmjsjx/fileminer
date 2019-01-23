@@ -1,6 +1,3 @@
-#!/usr/bin/env ruby
-
-
 require 'logger'
 require_relative 'fileminer/miner'
 require_relative 'fileminer/plugins'
@@ -214,16 +211,4 @@ class FileMiner
     @running = false if @running
   end
 
-end
-
-
-if __FILE__ == $0
-  # Usage:
-  #     ruby fileminer.rb /etc/fileminer/fileminer.yml
-  require 'yaml'
-  yml = File.open(ARGV[0]) { |io| io.read }
-  conf = YAML.load yml
-  fileminer = FileMiner.new conf
-  trap(:INT) { fileminer.stop_mining }
-  fileminer.start_mining
 end

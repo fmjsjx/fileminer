@@ -1,20 +1,93 @@
 #!/usr/bin/env ruby
 
 
+require 'optparse'
 require_relative '../lib/fileminer/tools/io'
 
-current_path = File.absolute_path __FILE__
-bin_path = File.dirname current_path
-project_path = File.dirname bin_path
-default_file_path = File.join project_path, 'conf', 'fileminer_default.yml'
 
-dst =  ARGV.empty? ? '/etc/fileminer/fileminer.yml' : File.absolute_path(ARGV[0])
-unless dst.end_with?('.yml') || dst.end_with?('.yaml')
-  dst = File.join dst, 'fileminer.yml'
+def gen_fileminer_conf(options)
+  current_path = File.absolute_path __FILE__
+  bin_path = File.dirname current_path
+  project_path = File.dirname bin_path
+  default_file_path = File.join project_path, 'conf', 'fileminer_default.yml'
+  if options.key? :out
+    out = options[:out]
+    dst = out.nil? ? '/etc/fileminer/fileminer.yml' : File.absolute_path(out)
+    unless dst.end_with?('.yml') || dst.end_with?('.yaml')
+      dst = File.join dst, 'fileminer.yml'
+    end
+
+    dst_dir = File.dirname dst
+    Dir.mkdirs dst_dir unless Dir.exist? dst_dir
+
+    File.copy_stream default_file_path, dst
+    puts "generated config file: #{dst}"
+  else
+    content = File.open(default_file_path) { |io| io.read }
+    puts content
+  end
 end
 
-dst_dir = File.dirname dst
-Dir.mkdirs dst_dir unless Dir.exist? dst_dir
+def gen_supervisor_conf(options)
+  wrapper_home = File.join ENV['GEM_HOME'], 'wrappers'
+  content = <<-EOS
+[program:fileminer]
+command=#{wrapper_home}/fileminer
+autostart=true
+autorestart=true
+stopsinal=INT
+user=root
+  EOS
+  if options.key? :out
+    out = options[:out]
+    dst = out.nil? ? './fileminer.ini' : File.absolute_path(out)
+    unless dst.end_with?('.ini') || dst.end_with?('.conf')
+      dst = File.join dst, 'fileminer.ini'
+    end
 
-File.copy_stream default_file_path, dst
-puts "generated config file: #{dst}"
+    dst_dir = File.dirname dst
+    Dir.mkdirs dst_dir unless Dir.exists? dst_dir
+    File.open(dst, 'w') { |io| io.write content }
+  else
+    puts content
+  end
+end
+
+
+options = Hash.new
+OptionParser.new do |opts|
+  # banner
+  opts.banner = "Usage: fileminer-genconf [options]"
+  opts.separator ''
+  opts.separator 'Options:'
+
+  # help
+  opts.on_tail('-h', '--help', 'Print help') do
+    puts opts
+    puts ''
+    exit
+  end
+
+  # type
+  options[:type] = :fileminer
+  opts.on('-t', '--type fileminer|supervisor', [:fileminer, :supervisor],
+          'Type of the config file to be generated', 'Default is fileminer') do |value|
+    options[:type] = value
+  end
+
+  # out
+  opts.on('-o', '--out [path]',
+          'Output content to a file',
+          'For type fileminer, default is /etc/fileminer/fileminer.yml',
+          'For type supervisor, default is ./fileminer.ini') do |value|
+    options[:out] = value
+  end
+
+end.parse!
+
+case options[:type]
+when :fileminer
+  gen_fileminer_conf options
+when :supervisor
+  gen_supervisor_conf options
+end

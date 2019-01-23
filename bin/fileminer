@@ -10,8 +10,9 @@ logger = Logger.new STDERR
 
 begin
   # Usage:
-  #   ruby -Ilib ./bin/fileminer /path/to/fileminer.yml
-  yml = File.open(ARGV[0]) { |io| io.read }
+  #   fileminer [/path/to/fileminer.yml]
+  path = ARGV.empty? '/etc/fileminer/fileminer.yml' : ARGV[0]
+  yml = File.open(path) { |io| io.read }
   conf = YAML.load yml
   # create fileminer instance
   fileminer = FileMiner.new conf
@@ -23,9 +24,6 @@ begin
   fileminer.start_mining
 rescue => e
   logger.error e
-  usage = <<-EOS
-  Usage:
-    ruby -Ilib ./bin/fileminer /path/to/fileminer.yml
-  EOS
+  usage = 'Usage: fileminer [/path/to/fileminer.yml]'
   puts usage
 end
