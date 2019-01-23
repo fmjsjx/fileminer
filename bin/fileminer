@@ -11,7 +11,7 @@ logger = Logger.new STDERR
 begin
   # Usage:
   #   fileminer [/path/to/fileminer.yml]
-  path = ARGV.empty? '/etc/fileminer/fileminer.yml' : ARGV[0]
+  path = ARGV.empty? ? '/etc/fileminer/fileminer.yml' : ARGV[0]
   yml = File.open(path) { |io| io.read }
   conf = YAML.load yml
   # create fileminer instance
