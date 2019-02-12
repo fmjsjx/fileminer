@@ -1,4 +1,8 @@
 # fileminer
+[![Gem Version](https://d25lcipzij17d.cloudfront.net/badge.svg?id=rb&type=6&v=1.0.0&x2=0)](https://rubygems.org/gems/fileminer)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/fmjsjx/fileminer/blob/master/LICENSE)
+
+
 A simple line based file/log transfer tool coding by ruby.
 
 # quick start
