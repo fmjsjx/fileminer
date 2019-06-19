@@ -13,8 +13,6 @@
   # default value is -1
   #max_lines_of_each_file: -1
 
-  # TODO
-
 # fileminer inputs
 fileminer.inputs:
 
@@ -153,7 +151,3 @@ output.redis:
   # options to be input when initialize the custom plugin
   #init_options:
     # some fields
-
-
-# other outputs
-# TODO
