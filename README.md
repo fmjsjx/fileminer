@@ -1,5 +1,5 @@
 # fileminer
-[![Gem Version](https://d25lcipzij17d.cloudfront.net/badge.svg?id=rb&type=6&v=1.0.0&x2=0)](https://rubygems.org/gems/fileminer)
+[![Gem Version](https://d25lcipzij17d.cloudfront.net/badge.svg?id=rb&type=6&v=1.1.0&x2=0)](https://rubygems.org/gems/fileminer)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/fmjsjx/fileminer/blob/master/LICENSE)
 
 
@@ -11,10 +11,10 @@ A simple line based file/log transfer tool coding by ruby.
 Install fileminer from RubyGems:
 ```
 $ gem install fileminer
-Fetching fileminer-1.0.0.gem
-Successfully installed fileminer-1.0.0
-Parsing documentation for fileminer-1.0.0
-Installing ri documentation for fileminer-1.0.0
+Fetching fileminer-1.1.0.gem
+Successfully installed fileminer-1.1.0
+Parsing documentation for fileminer-1.1.0
+Installing ri documentation for fileminer-1.1.0
 Done installing documentation for fileminer after 0 seconds
 1 gem installed
 $ _
@@ -136,6 +136,35 @@ output.mysql:
   password: somepwd
   database: somedb
   table: sometable
+```
+
+
+**Output using customized script:**
+
+Get your script ready:
+```ruby
+require 'fileminer/plugins'
+
+class YourPlugin < Output::OutputPlugin
+  def initialize options
+    ...
+  end
+  ...
+  public
+  def send_all(lines, &listener)
+    ...
+  end
+  ...
+end
+```
+
+Edit fileminer.yml
+```yaml
+output.script:
+  script: /path/to/your_script.rb
+  plugin_class: YourPlugin
+  init_options:
+    some_field: some value
 ```
 
 3. runnning fileminer

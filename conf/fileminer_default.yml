@@ -142,5 +142,18 @@ output.redis:
   # table name
   #table: sometable
 
+# using customized ruby script
+#output.script:
+  # customized ruby script path
+  #script: /path/to/script.rb
+
+  # class name of the custom plugin extends Output::OutputPlugin
+  #plugin_class: Output::CustomPlugin
+
+  # options to be input when initialize the custom plugin
+  #init_options:
+    # some fields
+
+
 # other outputs
 # TODO

@@ -13,7 +13,7 @@ class FileMiner
     refresh_files_time_trigger: '30s',
     max_time_of_each_mining: '5s',
     max_lines_of_each_mining: -1,
-    max_lines_of_each_file: -1, 
+    max_lines_of_each_file: -1,
   }
 
   attr_reader :miner, :output, :running
@@ -103,6 +103,9 @@ class FileMiner
     when conf.key?('output.mysql')
       mysql_conf = conf['output.mysql'].keys_to_sym
       init_output_mysql mysql_conf
+    when conf.key?('output.script')
+      script_conf = conf['output.script'].keys_to_sym
+      init_output_script script_conf
     else
       raise 'Missing config for output'
     end
@@ -134,6 +137,15 @@ class FileMiner
     require_relative 'fileminer/output/mysql'
     mysql_conf[:ssl_mode] = mysql_conf[:ssl_mode] == 'enabled' ? :enabled : :disabled
     Output::MysqlPlugin.new mysql_conf
+  end
+
+  def init_output_script(script_conf)
+    script_path = script_conf[:script]
+    plugin_class_name = script_conf[:plugin_class]
+    init_options = script_conf[:init_options] || {}
+    require script_path
+    plugin_class = Object.const_get plugin_class_name
+    plugin_class.new init_options
   end
 
   def send_lines(record, lines)
