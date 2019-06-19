@@ -145,7 +145,7 @@ class FileMiner
     init_options = script_conf[:init_options] || {}
     require script_path
     plugin_class = Object.const_get plugin_class_name
-    plugin_class.new init_options
+    plugin_class.new init_options.keys_to_sym
   end
 
   def send_lines(record, lines)
