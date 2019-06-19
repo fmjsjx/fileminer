@@ -22,7 +22,7 @@ $ _
 
 2. setting up fileminer
 
-+generate configuration file
+* generate configuration file
 
 At first, we should generate the fileminer configuration file.
 
@@ -48,7 +48,7 @@ generated config file: /etc/fileminer/fileminer.yml
 $ _
 ```
 
-+config input on fileminer.yml
+* config input on fileminer.yml
 
 Edit fileminer.inputs on fileminer.yml:
 ```yaml
@@ -57,9 +57,9 @@ fileminer.inputs:
     - /path/to/*.log
 ```
 
-+configure output on fileminer.yml
+* configure output on fileminer.yml
 
-In current version, fileminer provides three output plugins: redis, kafka & mysql. One process can only choose one of them.
+In current version, fileminer provides three prefab output plugins: redis, kafka & mysql. One process can only choose one of them.
 
 **Output to redis:**
 
@@ -139,7 +139,9 @@ output.mysql:
 ```
 
 
-**Output using customized script:**
+*Since 1.1.0, you can also use customized output plugin.*
+
+**Output using customized output plugin:**
 
 Get your script ready:
 ```ruby
