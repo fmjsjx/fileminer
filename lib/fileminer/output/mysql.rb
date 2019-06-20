@@ -88,6 +88,7 @@ module Output
       begin
         stat = @mysql.prepare sql
         stat.execute *values
+        stat.close
         @mysql.query 'COMMIT'
         listener.call
       rescue => err
