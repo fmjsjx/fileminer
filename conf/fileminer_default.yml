@@ -13,8 +13,6 @@
   # default value is -1
   #max_lines_of_each_file: -1
 
-  # TODO
-
 # fileminer inputs
 fileminer.inputs:
 
@@ -141,6 +139,3 @@ output.redis:
 
   # table name
   #table: sometable
-
-# other outputs
-# TODO
