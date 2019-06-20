@@ -20,6 +20,9 @@ Done installing documentation for fileminer after 0 seconds
 $ _
 ```
 
+*Note: This tool now only support cruby.*
+
+
 2. setting up fileminer
 
 * generate configuration file
