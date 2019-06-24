@@ -29,6 +29,17 @@ def gen_fileminer_conf(options)
 end
 
 def gen_supervisor_conf(options)
+  logfile = options[:logfile]
+  stdouts = ''
+  unless logfile.nil?
+    stdouts = <<-EOS
+stderr_logfile=#{logfile}
+stderr_logfile_maxbytes=10MB
+stderr_logfile_backups=10
+    EOS
+    log_dir = File.dirname logfile
+    Dir.mkdirs log_dir unless Dir.exists? log_dir
+  end
   wrapper_home = File.join ENV['GEM_HOME'], 'wrappers'
   content = <<-EOS
 [program:fileminer]
@@ -37,6 +48,7 @@ autostart=true
 autorestart=true
 stopsinal=INT
 user=root
+#{stdouts}
   EOS
   if options.key? :out
     out = options[:out]
@@ -44,7 +56,6 @@ user=root
     unless dst.end_with?('.ini') || dst.end_with?('.conf')
       dst = File.join dst, 'fileminer.ini'
     end
-
     dst_dir = File.dirname dst
     Dir.mkdirs dst_dir unless Dir.exists? dst_dir
     File.open(dst, 'w') { |io| io.write content }
@@ -81,6 +92,11 @@ OptionParser.new do |opts|
           'For type fileminer, default is /etc/fileminer/fileminer.yml',
           'For type supervisor, default is ./fileminer.ini') do |value|
     options[:out] = value
+  end
+
+  # logfile, just for type=supervisor
+  opts.on('-l', '--logfile', 'Logfile configured on supervisor config file') do |value|
+    options[:logfile] = value
   end
 
 end.parse!
