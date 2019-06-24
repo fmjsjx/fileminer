@@ -14,6 +14,7 @@ module Output
       ssl_mode: :disabled
     }
 
+    #
     # Create a mysql output plugin instance
     #
     # @param [Hash] options
@@ -36,18 +37,28 @@ module Output
       @encoding = conf[:encoding]
       conf[:ssl_mode] = :disabled if conf[:ssl_mode] != :enabled
       @mysql = Mysql2::Client.new conf
+      @mysql_conf = conf
       create_table_if_not_exists
       @sqls = Hash.new { |hash, key| hash[key] = generate_batch_sql key }
     end
 
     private
     def create_table_if_not_exists
-      rs = @mysql.query 'SHOW TABLES'
+      mysql_client = get_mysql_client
+      rs = mysql_client.query 'SHOW TABLES'
       tables = rs.map { |row| row.values[0] }
       unless tables.include? @table
         sql = create_table_sql
-        @mysql.query sql
+        mysql_client.query sql
       end
+    end
+
+    def get_mysql_client
+      mysql_client = @mysql
+      if mysql_client.closed?
+        @mysql = mysql_client = Mysql2::Client.new @mysql_conf
+      end
+      mysql_client
     end
 
     def create_table_sql
@@ -68,14 +79,7 @@ module Output
       "INSERT IGNORE INTO `#@table`(`host`,`path`,`pos`,`end`,`data`) VALUES " << (['(?,?,?,?,?)'] * size).join(',')
     end
 
-    def get_batch_sql(size)
-      if @sqls.key? size
-        @sqls[size]
-      else
-        @sqls[size] = generate_batch_sql size
-      end
-    end
-
+    #
     # Send all lines to mysql
     #
     # @param [Array] lines
@@ -83,18 +87,12 @@ module Output
     public
     def send_all(lines, &listener)
       values = lines.flat_map { |line| [line[:host], line[:path], line[:pos], line[:end], line[:data]] }
-      sql = get_batch_sql lines.size
-      @mysql.query 'BEGIN'
-      begin
-        stat = @mysql.prepare sql
-        stat.execute *values
-        stat.close
-        @mysql.query 'COMMIT'
-        listener.call
-      rescue => err
-        @mysql.query 'ROLLBACK'
-        raise err
-      end
+      sql = @sqls[lines.size]
+      mysql_client = get_mysql_client
+      stmt = @mysql_client.prepare sql
+      stmt.execute *values
+      stmt.close
+      listener.call
     end
 
   end
