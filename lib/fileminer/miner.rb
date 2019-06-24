@@ -81,7 +81,7 @@ class Miner
     now = Time.now
     file_paths = Set.new
     file_paths.merge Dir[*@paths].select { |path| File.file? path }
-    active_files, eof_size = select_active_files file_paths
+    active_files, eof_size = select_active_files now, file_paths
     if eof_size > @max_eof_files
       move_eof_to_history
     end
@@ -128,7 +128,7 @@ class Miner
   end
 
   private
-  def select_active_files(file_paths)
+  def select_active_files(now, file_paths)
     eof_seconds = @eof_seconds
     eof_size = 0
     active_files = @files.select do |record|
