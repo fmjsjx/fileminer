@@ -71,7 +71,13 @@ end
 options = Hash.new
 OptionParser.new do |opts|
   # banner
-  opts.banner = "Usage: fileminer-genconf [options]"
+  opts.banner = "Usage:"
+  opts.separator '    fileminer-genconf [options]'
+  opts.separator ''
+  opts.separator 'Samples:'
+  opts.separator '    fileminer-genconf -t fileminer -o      Generate config on /etc/fileminer/fileminer.yml'
+  opts.separator '    fileminer-genconf -t supervisor -o -l  Generate ./fileminer.ini with logfile on'
+  opts.separator '                                           /var/log/fileminer/stderr.log'
   opts.separator ''
   opts.separator 'Options:'
 

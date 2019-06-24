@@ -1,5 +1,5 @@
 # fileminer
-[![Gem Version](https://d25lcipzij17d.cloudfront.net/badge.svg?id=rb&type=6&v=1.1.0&x2=0)](https://rubygems.org/gems/fileminer)
+[![Gem Version](https://d25lcipzij17d.cloudfront.net/badge.svg?id=rb&type=6&v=1.1.1&x2=0)](https://rubygems.org/gems/fileminer)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/fmjsjx/fileminer/blob/master/LICENSE)
 
 
@@ -11,10 +11,10 @@ A simple line based file/log transfer tool coding by ruby.
 Install fileminer from RubyGems:
 ```
 $ gem install fileminer
-Fetching fileminer-1.1.0.gem
-Successfully installed fileminer-1.1.0
-Parsing documentation for fileminer-1.1.0
-Installing ri documentation for fileminer-1.1.0
+Fetching fileminer-1.1.1.gem
+Successfully installed fileminer-1.1.1
+Parsing documentation for fileminer-1.1.1
+Installing ri documentation for fileminer-1.1.1
 Done installing documentation for fileminer after 0 seconds
 1 gem installed
 $ _
@@ -32,7 +32,13 @@ At first, we should generate the fileminer configuration file.
 We provide a command tool 'fileminer-genconf' to generate configurations:
 ```
 $ fileminer-genconf -h
-Usage: fileminer-genconf [options]
+Usage:
+    fileminer-genconf [options]
+
+Samples:
+    fileminer-genconf -t fileminer -o      Generate config on /etc/fileminer/fileminer.yml
+    fileminer-genconf -t supervisor -o -l  Generate ./fileminer.ini with logfile on
+                                           /var/log/fileminer/stderr.log
 
 Options:
     -t, --type fileminer|supervisor  Type of the config file to be generated
@@ -40,7 +46,10 @@ Options:
     -o, --out [path]                 Output content to a file
                                      For type fileminer, default is /etc/fileminer/fileminer.yml
                                      For type supervisor, default is ./fileminer.ini
+    -l, --logfile [path]             Logfile configured on supervisor config file
+                                     Default is /var/log/fileminer/stderr.log
     -h, --help                       Print help
+
 $ _
 ```
 
