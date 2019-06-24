@@ -30,6 +30,9 @@ end
 
 def gen_supervisor_conf(options)
   logfile = options[:logfile]
+  if logfile.nil? && options.key? :logfile
+    logfile = '/var/log/fileminer/stderr.log'
+  end
   stdouts = ''
   unless logfile.nil?
     stdouts = <<-EOS
