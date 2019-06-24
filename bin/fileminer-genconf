@@ -95,7 +95,9 @@ OptionParser.new do |opts|
   end
 
   # logfile, just for type=supervisor
-  opts.on('-l', '--logfile path', 'Logfile configured on supervisor config file') do |value|
+  opts.on('-l', '--logfile [path]',
+          'Logfile configured on supervisor config file',
+          'Default is /var/log/fileminer/stderr.log') do |value|
     options[:logfile] = value
   end
 
