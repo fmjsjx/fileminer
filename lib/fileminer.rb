@@ -14,6 +14,7 @@ class FileMiner
     max_time_of_each_mining: '5s',
     max_lines_of_each_mining: -1,
     max_lines_of_each_file: -1,
+    sleep_time_when_no_more_data: '5s',
   }
 
   attr_reader :miner, :output, :running
@@ -59,6 +60,8 @@ class FileMiner
     end
     # refresh_files_time_trigger
     @refresh_files_time_trigger = parse_time conf[:refresh_files_time_trigger], 'refresh_files_time_trigger on fileminer.settings'
+    # sleep seconds when no more data
+    @sleep_seconds_when_no_more_data = parse_time conf[:sleep_time_when_no_more_data], 'sleep_time_when_no_more_data on fileminer.settings'
   end
 
   def parse_time(value, conf_name)
@@ -168,12 +171,13 @@ class FileMiner
   def mine_once
     start_time = Time.now
     full_lines = 0
-    @miner.active_files.all? do |record|
+    miner = @miner
+    miner.active_files.all? do |record|
       mining_next = true
       if record[:pos] < File.size(record[:path])
         file_lines = 0
         loop do
-          lines = @miner.read_lines record
+          lines = miner.read_lines record
           break if lines.empty?
           send_lines record, lines
           file_lines += lines.size
@@ -193,6 +197,7 @@ class FileMiner
   def start_mining
     unless @running
       @running = true
+      sleep_seconds = @sleep_seconds_when_no_more_data
       while @running
         begin
           files_refreshed = check_files
@@ -200,13 +205,13 @@ class FileMiner
           # sleep 5 seconds if no more data
           # TODO using settings instead in future
           if sent_lines == 0
-            @miner.save_registry if files_refreshed
-            sleep 5
+            @miner.save_work_status if files_refreshed
+            sleep sleep_seconds
           end
         rescue => e
           @logger.error e
           # sleep for a little while to wait output recover
-          sleep 5 if @running
+          sleep sleep_seconds if @running
         end
       end
       @miner.save_registry

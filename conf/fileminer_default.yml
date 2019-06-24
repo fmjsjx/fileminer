@@ -13,12 +13,26 @@
   # default value is -1
   #max_lines_of_each_file: -1
 
+  # default value is 5s
+  #sleep_time_when_no_more_data: 5s
+
 # fileminer inputs
 fileminer.inputs:
 
+  # setup the path of work dir
+  # default value is /var/lib/fileminer
+  #work_dir: /var/lib/fileminer
+
   # setup the path of the registry file
-  # default value is /var/lib/fileminer/registry
+  # default value is ${work_dir}/registry
   #registry_path: /var/lib/fileminer/registry
+
+  # setup the path of the history file
+  # default value is ${work_dir}/history
+  #history_path: /var/lib/fileminer/history
+
+  # default value is 20
+  #max_eof_files: 20
 
   # file paths
   paths:
