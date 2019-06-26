@@ -1,5 +1,5 @@
 # fileminer
-[![Gem Version](https://d25lcipzij17d.cloudfront.net/badge.svg?id=rb&type=6&v=1.1.1&x2=0)](https://rubygems.org/gems/fileminer)
+[![Gem Version](https://d25lcipzij17d.cloudfront.net/badge.svg?id=rb&type=6&v=1.2.0&x2=0)](https://rubygems.org/gems/fileminer)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/fmjsjx/fileminer/blob/master/LICENSE)
 
 
@@ -11,10 +11,10 @@ A simple line based file/log transfer tool coding by ruby.
 Install fileminer from RubyGems:
 ```
 $ gem install fileminer
-Fetching fileminer-1.1.1.gem
-Successfully installed fileminer-1.1.1
-Parsing documentation for fileminer-1.1.1
-Installing ri documentation for fileminer-1.1.1
+Fetching fileminer-1.2.0.gem
+Successfully installed fileminer-1.2.0
+Parsing documentation for fileminer-1.2.0
+Installing ri documentation for fileminer-1.2.0
 Done installing documentation for fileminer after 0 seconds
 1 gem installed
 $ _

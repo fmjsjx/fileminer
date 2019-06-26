@@ -6,8 +6,11 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Fang MinJie']
   spec.email         = ['fmjsjx@163.com']
 
-  spec.summary       = 'A simple file/log transfer tool coding by ruby.'
-  spec.description   = 'A simple file/log transfer tool coding by ruby.'
+  spec.summary       = 'A simple file/log transfer tool.'
+  spec.description   = <<-EOF
+    FileMiner is a simple file/log transfer tool implemented in Ruby.
+    Up to now, FileMiner has only tested on CRuby.
+  EOF
   spec.homepage      = 'https://github.com/fmjsjx/fileminer'
   spec.license       = 'MIT'
 
