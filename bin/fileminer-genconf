@@ -67,6 +67,37 @@ user=root
   end
 end
 
+def gen_systemd_conf(options)
+  wrapper_home = File.join ENV['GEM_HOME'], 'wrappers'
+  content = <<-EOS
+[Unit]
+Description=FileMiner Service
+After=network.target
+
+[Service]
+ExecStart=#{wrapper_home}/fileminer
+KillSignal=SIGINT
+PIDFile=/run/fileminer.pid
+Restart=on-failure
+SuccessExitStatus=0
+
+[Install]
+WantedBy=multi-user.target
+  EOS
+  if options.key? :out
+    out = options[:out]
+    dst = out.nil? ? '/usr/lib/system/systemd/fileminer.service' : File.absolute_path(out)
+    unless dst.end_with?('.service')
+      dst = File.join dst, 'fileminer.service'
+    end
+    dst_dir = File.dirname dst
+    Dir.mkdirs dst_dir unless Dir.exists? dst_dir
+    File.open(dst, 'w') { |io| io.write content }
+  else
+    puts content
+  end
+end
+
 
 options = Hash.new
 OptionParser.new do |opts|
@@ -78,6 +109,8 @@ OptionParser.new do |opts|
   opts.separator '    fileminer-genconf -t fileminer -o      Generate config on /etc/fileminer/fileminer.yml'
   opts.separator '    fileminer-genconf -t supervisor -o -l  Generate ./fileminer.ini with logfile on'
   opts.separator '                                           /var/log/fileminer/stderr.log'
+  opts.separator '    fileminer-genconf -t systemd -o        Generate systemd config on'
+  opts.separator '                                           /usr/lib/system/systemd/fileminer.service'
   opts.separator ''
   opts.separator 'Options:'
 
@@ -90,7 +123,7 @@ OptionParser.new do |opts|
 
   # type
   options[:type] = :fileminer
-  opts.on('-t', '--type fileminer|supervisor', [:fileminer, :supervisor],
+  opts.on('-t', '--type fileminer|supervisor|systemd', [:fileminer, :supervisor, :systemd],
           'Type of the config file to be generated', 'Default is fileminer') do |value|
     options[:type] = value
   end
@@ -117,4 +150,6 @@ when :fileminer
   gen_fileminer_conf options
 when :supervisor
   gen_supervisor_conf options
+when :systemd
+  gen_systemd_conf options
 end
