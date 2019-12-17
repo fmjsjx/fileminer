@@ -75,18 +75,20 @@ Description=FileMiner Service
 After=network.target
 
 [Service]
-ExecStart=#{wrapper_home}/fileminer
-KillSignal=SIGINT
+Type=simple
 PIDFile=/run/fileminer.pid
-Restart=on-failure
 SuccessExitStatus=0
+KillSignal=SIGINT
+ExecStart=#{wrapper_home}/fileminer
+User=root
+Restart=on-abort
 
 [Install]
 WantedBy=multi-user.target
   EOS
   if options.key? :out
     out = options[:out]
-    dst = out.nil? ? '/usr/lib/system/systemd/fileminer.service' : File.absolute_path(out)
+    dst = out.nil? ? '/usr/lib/systemd/system/fileminer.service' : File.absolute_path(out)
     unless dst.end_with?('.service')
       dst = File.join dst, 'fileminer.service'
     end
@@ -110,7 +112,7 @@ OptionParser.new do |opts|
   opts.separator '    fileminer-genconf -t supervisor -o -l  Generate ./fileminer.ini with logfile on'
   opts.separator '                                           /var/log/fileminer/stderr.log'
   opts.separator '    fileminer-genconf -t systemd -o        Generate systemd config on'
-  opts.separator '                                           /usr/lib/system/systemd/fileminer.service'
+  opts.separator '                                           /usr/lib/systemd/system/fileminer.service'
   opts.separator ''
   opts.separator 'Options:'
 
