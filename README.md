@@ -1,5 +1,5 @@
 # fileminer
-[![Gem Version](https://d25lcipzij17d.cloudfront.net/badge.svg?id=rb&type=6&v=1.2.0&x2=0)](https://rubygems.org/gems/fileminer)
+[![Gem Version](https://d25lcipzij17d.cloudfront.net/badge.svg?id=rb&type=6&v=1.2.1&x2=0)](https://rubygems.org/gems/fileminer)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/fmjsjx/fileminer/blob/master/LICENSE)
 
 
@@ -11,10 +11,10 @@ A simple line based file/log transfer tool coding by ruby.
 Install fileminer from RubyGems:
 ```
 $ gem install fileminer
-Fetching fileminer-1.2.0.gem
-Successfully installed fileminer-1.2.0
-Parsing documentation for fileminer-1.2.0
-Installing ri documentation for fileminer-1.2.0
+Fetching fileminer-1.2.1.gem
+Successfully installed fileminer-1.2.1
+Parsing documentation for fileminer-1.2.1
+Installing ri documentation for fileminer-1.2.1
 Done installing documentation for fileminer after 0 seconds
 1 gem installed
 $ _
@@ -39,10 +39,12 @@ Samples:
     fileminer-genconf -t fileminer -o      Generate config on /etc/fileminer/fileminer.yml
     fileminer-genconf -t supervisor -o -l  Generate ./fileminer.ini with logfile on
                                            /var/log/fileminer/stderr.log
+    fileminer-genconf -t systemd -o        Generate systemd config on
+                                           /usr/lib/systemd/system/fileminer.service
 
 Options:
-    -t, --type fileminer|supervisor  Type of the config file to be generated
-                                     Default is fileminer
+    -t fileminer|supervisor|systemd, Type of the config file to be generated
+        --type                       Default is fileminer
     -o, --out [path]                 Output content to a file
                                      For type fileminer, default is /etc/fileminer/fileminer.yml
                                      For type supervisor, default is ./fileminer.ini
